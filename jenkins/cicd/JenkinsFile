@@ -1,0 +1,56 @@
+@Library('utilities') _
+
+pipeline {
+  agent {
+    docker {
+        image 'python:3.7.2'
+        reuseNode true
+    }
+  }
+  environment {
+    MAX_LINE_LENGTH = "110"
+  }
+  stages {
+    
+    stage('cleaning') {
+      steps {
+        echo "Cleaning"
+        echo "workspace: ${env.WORKSPACE}"
+        cleanWs()
+        sh 'ls -l'
+      }
+    }
+      
+    stage('checkout') {
+        steps {
+            git 'https://github.com/afreydev/python-printer.git'
+        }
+    }
+    
+    stage('linter') {
+        steps {
+            sh 'pip install flake8'
+            sh 'flake8 . --count --select=E9,F63,F7,F82 --exclude=setup.py --show-source --statistics'
+            sh "flake8 . --count --exclude=setup.py --max-line-length=${MAX_LINE_LENGTH} --statistics"
+        }
+    }
+    stage('build') {
+        steps {
+            sh 'pip list > list.txt'
+            sh 'pip install setuptools pip wheel'
+            sh 'python3 setup.py sdist bdist_wheel'
+        }
+    }
+    stage('test') {
+        steps {
+            sh 'pip install pytest'
+            sh 'python setup.py install'
+            sh 'pytest'
+            script {
+                shared.hello 'Hello Angel'
+            }
+        }
+    }
+
+  }
+}
