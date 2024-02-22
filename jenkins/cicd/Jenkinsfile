@@ -9,6 +9,8 @@ pipeline {
   }
   environment {
     MAX_LINE_LENGTH = "110"
+    WHEEL_FILE_NAME = "dist/python_printer-1.0.0-py3-none-any.whl"
+    ARTIFACTORY_TOKEN = credentials('artifactory')
   }
   stages {
     
@@ -52,6 +54,10 @@ pipeline {
             sh 'ls'
         }
     }
-
+    stage('store artifact') {
+        steps {
+            sh "curl -uadmin:${env.ARTIFACTORY_TOKEN} -v -X PUT --upload-file ${env.WHEEL_FILE_NAME}  http://artifactory:8082/artifactory/generic-local/${env.BUILD_ID}/"
+        }
+    }
   }
 }
