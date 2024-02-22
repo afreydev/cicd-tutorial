@@ -49,6 +49,7 @@ pipeline {
             script {
                 shared.hello 'Hello Angel'
             }
+            sh 'ls'
         }
     }
 

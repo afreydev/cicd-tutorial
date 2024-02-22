@@ -1,0 +1,42 @@
+pipeline {
+  agent any
+  environment {
+    DOCKER_IMAGE_NAME = "afreydev/companies-backend"
+  }
+  stages {
+    
+    stage('cleaning') {
+      steps {
+        echo "Cleaning"
+        echo "workspace: ${env.WORKSPACE}"
+        cleanWs()
+        sh 'ls -l'
+      }
+    }
+      
+    stage('checkout') {
+        steps {
+            git branch: "main", url:'https://github.com/afreydev/compose-to-k8s.git'
+        }
+    }
+    stage('build') {
+        steps {
+            dir("flask-backend/api") {
+              sh "docker build -t ${env.DOCKER_IMAGE_NAME}:${env.BUILD_ID} ."
+            }
+            
+        }
+    }
+    stage('test') {
+        steps {
+            sh "docker run --rm ${env.DOCKER_IMAGE_NAME}:${env.BUILD_ID} echo 'TESTING'"
+        }
+    }
+    stage('push') {
+        steps {
+            sh "docker push ${env.DOCKER_IMAGE_NAME}:${env.BUILD_ID}"
+        }
+    }
+
+  }
+}
